@@ -1,6 +1,7 @@
 import pandas as pd
-from prefect import flow, task
+# from prefect import flow, task
 import os
+import wget
 
 # @task(log_prints=True, retries=3)
 def download_file(data_year: int, data_type: str = "projects", save_dir_pref: str= 'data') -> None:
@@ -12,8 +13,12 @@ def download_file(data_year: int, data_type: str = "projects", save_dir_pref: st
     file_path = f"{save_dir}/{data_year}.zip"
     if not os.path.isdir(save_dir):
         os.makedirs(save_dir)
-    os.system(f'wget -O {file_path} {url}')
-    print(f'Downlaod of {data_type}-{data_year} was successful.')
+    # os.system(f'wget -O {file_path} {url}')
+    if os.path.exists(file_path):
+        print(f"File already present in {file_path}. Skipping download.")
+        return 
+    filename=wget.download(url=url, out=file_path)
+    print(f'Downlaod of {data_type}-{data_year} was successful. Downloaded file name: {filename}')
     return
 
 download_file(data_year= 2020)
@@ -28,5 +33,6 @@ data_type_dict = {'APPLICATION_ID': 'int64', 'ACTIVITY': str, 'ADMINISTERING_IC'
                     'PROJECT_TERMS': str, 'PROJECT_TITLE': str, 'SERIAL_NUMBER': 'Int64', 'STUDY_SECTION': str, 'STUDY_SECTION_NAME': str, 'SUBPROJECT_ID': 'Int64', 
                     'SUFFIX': str, 'SUPPORT_YEAR': 'Int64', 'DIRECT_COST_AMT': 'Int64', 'INDIRECT_COST_AMT': 'Int64', 'TOTAL_COST': 'Int64', 'TOTAL_COST_SUB_PROJECT': 'Int64'}
 
-df = pd.read_csv('data/projects/RePORTER_PRJ_C_FY2020.csv', encoding='latin-1', dtype= data_type_dict)
+# df = pd.read_csv('data/projects/RePORTER_PRJ_C_FY2020.csv', encoding='latin-1', dtype= data_type_dict)
 df = pd.read_csv('data/projects/2020.zip',compression='zip', encoding='latin-1', dtype= data_type_dict)
+print(df.shape)
