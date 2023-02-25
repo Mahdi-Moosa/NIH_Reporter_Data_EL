@@ -4,11 +4,29 @@ import os
 
 # @task(log_prints=True, retries=3)
 def download_file(data_year: int, data_type: str = "projects", save_dir_pref: str= 'data') -> None:
+    data_type_options = ['projects', 'abstracts', 'publications', 'linktables']
+    if data_type not in data_type_options:
+        raise ValueError(f"data_type not within valid options. Valid options are {data_type_options}")
     save_dir = f'{save_dir_pref}/{data_type}'
     url = f"https://reporter.nih.gov/exporter/{data_type}/download/{data_year}"
     file_path = f"{save_dir}/{data_year}.zip"
     if not os.path.isdir(save_dir):
         os.makedirs(save_dir)
     os.system(f'wget -O {file_path} {url}')
+    print(f'Downlaod of {data_type}-{data_year} was successful.')
+    return
 
 download_file(data_year= 2020)
+
+
+data_type_dict = {'APPLICATION_ID': 'int64', 'ACTIVITY': str, 'ADMINISTERING_IC': str, 'APPLICATION_TYPE': 'Int64', 'ARRA_FUNDED': str, 
+                    'AWARD_NOTICE_DATE': str, 'BUDGET_START': str, 'BUDGET_END': str, 'CFDA_CODE': 'Int64', 'CORE_PROJECT_NUM': str, 
+                    'ED_INST_TYPE': str, 'FOA_NUMBER': str, 'FULL_PROJECT_NUM': str, 'FUNDING_ICs': str, 'FUNDING_MECHANISM': str, 
+                    'FY': 'int64', 'IC_NAME': str, 'NIH_SPENDING_CATS': str, 'ORG_CITY': str, 'ORG_COUNTRY': str, 'ORG_DEPT': str, 
+                    'ORG_DISTRICT': 'Int64', 'ORG_DUNS': str, 'ORG_FIPS': str, 'ORG_IPF_CODE': 'Int64', 'ORG_NAME': str, 'ORG_STATE': str, 
+                    'ORG_ZIPCODE': str, 'PHR': str, 'PI_IDS': str, 'PI_NAMEs': str, 'PROGRAM_OFFICER_NAME': str, 'PROJECT_START': str, 'PROJECT_END': str, 
+                    'PROJECT_TERMS': str, 'PROJECT_TITLE': str, 'SERIAL_NUMBER': 'Int64', 'STUDY_SECTION': str, 'STUDY_SECTION_NAME': str, 'SUBPROJECT_ID': 'Int64', 
+                    'SUFFIX': str, 'SUPPORT_YEAR': 'Int64', 'DIRECT_COST_AMT': 'Int64', 'INDIRECT_COST_AMT': 'Int64', 'TOTAL_COST': 'Int64', 'TOTAL_COST_SUB_PROJECT': 'Int64'}
+
+df = pd.read_csv('data/projects/RePORTER_PRJ_C_FY2020.csv', encoding='latin-1', dtype= data_type_dict)
+df = pd.read_csv('data/projects/2020.zip',compression='zip', encoding='latin-1', dtype= data_type_dict)
