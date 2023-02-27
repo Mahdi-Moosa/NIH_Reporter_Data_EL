@@ -12,7 +12,7 @@ def download_file(
     save_dir_prefix: str = "data",
     replace_existing_file: bool = False,
 ) -> str:
-    '''Ths function downloads data file from NIH RePORTER as specified by data_year and data_type to directory specified by save_dir_prefix.
+    """Ths function downloads data file from NIH RePORTER as specified by data_year and data_type to directory specified by save_dir_prefix.
     See https://report.nih.gov/faqs for further details.
     Input:
         data_year: Year of data to be downloaded.
@@ -21,7 +21,7 @@ def download_file(
         replace_existing_file: A boolean flag. Set False by default. If set True, existing file(s) will be discarded and will be replaced by downloaded files.
     Output:
         Outputs saved file path (or existing file path) as a string.
-    '''
+    """
     # import wget
     data_type_options = ["projects", "abstracts", "publications", "linktables"]
 
@@ -50,6 +50,7 @@ def download_file(
     )
     return file_path
 
+
 @task(log_prints=True)
 def unzip_file(file_path: str) -> str:
     """This function unpacks compressed file.
@@ -63,6 +64,7 @@ def unzip_file(file_path: str) -> str:
     shutil.unpack_archive(filename=file_path, extract_dir=file_dir)
     print(f"File unpack successful for {file_path}.")
     return file_dir
+
 
 @task(log_prints=True)
 def zip_to_parquet(file_path: str) -> str:
@@ -88,13 +90,14 @@ def zip_to_parquet(file_path: str) -> str:
             "',engine='python']",
         )
     print(f"Total number of rows read: {len(df)}")
-    parquet_path = (
-        "/".join(file_path.split("/")[:-1])
-        + "/"
-        + "extracted/"
-        + file_path.split("/")[-1]
-        + ".parquet"
-    )
+    
+    parquet_folder = "/".join(file_path.split("/")[:-1]) + "/" + "extracted/"
+    parquet_path = parquet_folder + file_path.split("/")[-1] + ".parquet"
+    if not os.path.isdir(parquet_folder):
+        print(f'{parquet_folder} was absent. Creating the folder/directory.')
+        os.makedirs(parquet_folder)
+    
+    # Write data to parquet file.
     df.to_parquet(parquet_path)
     return parquet_path
 
@@ -174,6 +177,7 @@ def fetch_and_save_parquet(
     saved_path = zip_to_parquet(file_path=file_path)
     print(f"Parquet file saved at: {saved_path}")
 
+
 @flow(log_prints=True, description="Fetch data from NIH RePORTER to Data Lake.")
 def nih_reporter_dw(
     data_years: list[int] = list(range(1985, 2022, 1)),
@@ -183,7 +187,10 @@ def nih_reporter_dw(
 ):
     for data_type in data_types:
         for year in data_years:
-            fetch_and_save_parquet(data_year=year, data_type=data_type, save_dir_prefix=save_dir_prefix)
+            fetch_and_save_parquet(
+                data_year=year, data_type=data_type, save_dir_prefix=save_dir_prefix
+            )
+
 
 if __name__ == "__main__":
-    nih_reporter_dw(data_types=['projects'], data_years=[2019, 2020])
+    nih_reporter_dw(data_types=["projects", "publications"], data_years=[2019, 2020])
