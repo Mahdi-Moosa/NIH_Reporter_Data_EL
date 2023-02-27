@@ -1,11 +1,12 @@
 import pandas as pd
 
-# from prefect import flow, task
+from prefect import flow, task
 import os
 import wget
 import shutil
 
-# @task(log_prints=True, retries=3)
+
+@task(log_prints=True, retries=3)
 def download_file(
     data_year: int,
     data_type: str = "projects",
@@ -42,7 +43,7 @@ def download_file(
     return file_path
 
 
-download_file(data_year=2020)
+# download_file(data_year=2020)
 
 
 def unzip_file(file_path: str) -> str:
@@ -55,29 +56,43 @@ def unzip_file(file_path: str) -> str:
     # import shutil
     file_dir = "/".join(file_path.split("/")[:-1]) + "/" + "extracted/"
     shutil.unpack_archive(filename=file_path, extract_dir=file_dir)
-    print(f'File unpack successful for {file_path}.')
+    print(f"File unpack successful for {file_path}.")
     return file_dir
 
 
 def zip_to_parquet(file_path: str) -> str:
-        '''This function takes file_path (of zip compressed dataframe) as input. Reads files as pandas dataframe and returns the dataframe.
-        Input:
-            file_path: path to zip compressed csv files.
-        Output:
-            String: Path to saved parquet file.
-        '''
-        try:
-            df = pd.read_csv(file_path, compression='zip', low_memory=False, encoding ='latin-1')
-            print('Parse engine was default.')
-        except:
-            df = pd.read_csv(file_path, compression='zip', encoding ='latin-1', sep='","',engine='python')
-            column_headers = [x.replace('"', '') for x in df.columns]
-            df.columns = column_headers
-            print("Parse engine was python, with custom separator: [sep='","',engine='python']")
-        print(f'Total number of rows read: {len(df)}')
-        parquet_path = "/".join(file_path.split("/")[:-1]) + "/" + "extracted/" + file_path.split('/')[-1] + '.parquet'
-        df.to_parquet(parquet_path)
-        return parquet_path
+    """This function takes file_path (of zip compressed dataframe) as input. Reads files as pandas dataframe and returns the dataframe.
+    Input:
+        file_path: path to zip compressed csv files.
+    Output:
+        String: Path to saved parquet file.
+    """
+    try:
+        df = pd.read_csv(
+            file_path, compression="zip", low_memory=False, encoding="latin-1"
+        )
+        print("Parse engine was default.")
+    except:
+        df = pd.read_csv(
+            file_path, compression="zip", encoding="latin-1", sep='","', engine="python"
+        )
+        column_headers = [x.replace('"', "") for x in df.columns]
+        df.columns = column_headers
+        print(
+            "Parse engine was python, with custom separator: [sep='",
+            "',engine='python']",
+        )
+    print(f"Total number of rows read: {len(df)}")
+    parquet_path = (
+        "/".join(file_path.split("/")[:-1])
+        + "/"
+        + "extracted/"
+        + file_path.split("/")[-1]
+        + ".parquet"
+    )
+    df.to_parquet(parquet_path)
+    return parquet_path
+
 
 # def convert_to_parquet(df : pd.DataFrame, save_dir : str) -> str:
 #     df.to_parquet(save_dir)
