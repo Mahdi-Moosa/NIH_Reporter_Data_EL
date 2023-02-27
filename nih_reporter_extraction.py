@@ -182,7 +182,7 @@ def nih_reporter_dw(
             saved_file_path = fetch_and_save_parquet(
                 data_year=year, data_type=data_type, save_dir_prefix=save_dir_prefix, gcs_write=True
             )
-            print(f"Data fetch and write succesful for data type: {data_type} and year: {year}.")
+            print(f"Data fetch and write succesful for data type: {data_type} and year: {year}.\n Save location was {saved_file_path}")
 
 
 if __name__ == "__main__":
