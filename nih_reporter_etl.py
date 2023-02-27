@@ -59,12 +59,12 @@ def unzip_file(file_path: str) -> str:
     return file_dir
 
 
-def read_df(file_path: str) -> pd.DataFrame:
+def zip_to_parquet(file_path: str) -> str:
         '''This function takes file_path (of zip compressed dataframe) as input. Reads files as pandas dataframe and returns the dataframe.
         Input:
             file_path: path to zip compressed csv files.
         Output:
-            pandas dataframe.
+            String: Path to saved parquet file.
         '''
         try:
             df = pd.read_csv(file_path, compression='zip', low_memory=False, encoding ='latin-1')
@@ -75,10 +75,12 @@ def read_df(file_path: str) -> pd.DataFrame:
             df.columns = column_headers
             print("Parse engine was python, with custom separator: [sep='","',engine='python']")
         print(f'Total number of rows read: {len(df)}')
-        return df
+        parquet_path = "/".join(file_path.split("/")[:-1]) + "/" + "extracted/" + file_path.split('/')[-1] + '.parquet'
+        df.to_parquet(parquet_path)
+        return parquet_path
 
-def convert_to_parquet(df : pd.DataFrame, save_dir : str) -> str:
-    df.to_parquet('')
+# def convert_to_parquet(df : pd.DataFrame, save_dir : str) -> str:
+#     df.to_parquet(save_dir)
 
 data_type_dict = {
     "APPLICATION_ID": "int64",
