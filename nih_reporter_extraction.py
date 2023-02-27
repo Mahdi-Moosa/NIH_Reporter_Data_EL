@@ -176,7 +176,7 @@ def fetch_and_save_parquet(
 
 @flow(log_prints=True, description="Fetch data from NIH RePORTER to Data Lake.")
 def nih_reporter_dw(
-    data_years: list(int) = list(range(1895, 2022, 1)),
+    data_years: list[int] = list(range(1985, 2022, 1)),
     data_types: list = ["projects", "abstracts", "publications", "linktables"],
     save_dir_prefix: str = "data",
     replace_existing_file: bool = False,
