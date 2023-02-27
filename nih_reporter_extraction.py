@@ -1,5 +1,6 @@
 import pandas as pd
 from prefect import flow, task
+from prefect_gcp.cloud_storage import GcsBucket
 import os
 import wget
 import shutil
@@ -98,10 +99,17 @@ def zip_to_parquet(file_path: str) -> str:
     df.to_parquet(parquet_path)
     return parquet_path
 
+@task(log_prints=True, retries=3)
+def write_gcs(path: str) -> None:
+    """Upload local parquet file to GCS"""
+    gcs_block = GcsBucket.load("de-zoomcamp-gcs")
+    gcs_block.upload_from_path(from_path=path, to_path=path)
+    return
+
 @flow(log_prints=True)
 def fetch_and_save_parquet(
     data_year, data_type, save_dir_prefix, replace_existing_file: bool = False
-):
+) -> str:
     '''Subflow to download and process single file.'''
     file_path = download_file(
         data_type=data_type,
@@ -111,6 +119,7 @@ def fetch_and_save_parquet(
     )
     saved_path = zip_to_parquet(file_path=file_path)
     print(f"Parquet file saved at: {saved_path}")
+    return saved_path
 
 @flow(log_prints=True, description="Fetch data from NIH RePORTER to Data Lake.")
 def nih_reporter_dw(
@@ -122,9 +131,10 @@ def nih_reporter_dw(
     '''Main flow to download all NIH RePORTER files.'''
     for data_type in data_types:
         for year in data_years:
-            fetch_and_save_parquet(
+            saved_file_path = fetch_and_save_parquet(
                 data_year=year, data_type=data_type, save_dir_prefix=save_dir_prefix
             )
+            write_gcs(saved_file_path)
 
 if __name__ == "__main__":
     nih_reporter_dw()
