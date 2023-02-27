@@ -4,7 +4,6 @@ import os
 import wget
 import shutil
 
-
 @task(log_prints=True, retries=3)
 def download_file(
     data_year: int,
@@ -50,7 +49,6 @@ def download_file(
     )
     return file_path
 
-
 @task(log_prints=True)
 def unzip_file(file_path: str) -> str:
     """This function unpacks compressed file.
@@ -64,7 +62,6 @@ def unzip_file(file_path: str) -> str:
     shutil.unpack_archive(filename=file_path, extract_dir=file_dir)
     print(f"File unpack successful for {file_path}.")
     return file_dir
-
 
 @task(log_prints=True)
 def zip_to_parquet(file_path: str) -> str:
@@ -130,4 +127,4 @@ def nih_reporter_dw(
             )
 
 if __name__ == "__main__":
-    nih_reporter_dw(data_years=[2019, 2020])
+    nih_reporter_dw()
