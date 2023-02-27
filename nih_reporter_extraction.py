@@ -183,7 +183,7 @@ def nih_reporter_dw(
 ):
     for data_type in data_types:
         for year in data_years:
-            fetch_and_save_parquet(data_year=year, data_type=data_type)
+            fetch_and_save_parquet(data_year=year, data_type=data_type, save_dir_prefix=save_dir_prefix)
 
 if __name__ == "__main__":
     nih_reporter_dw(data_types=['projects'], data_years=[2019, 2020])
