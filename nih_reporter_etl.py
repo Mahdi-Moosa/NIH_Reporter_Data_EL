@@ -3,6 +3,7 @@ import pandas as pd
 # from prefect import flow, task
 import os
 import wget
+import shutil
 
 # @task(log_prints=True, retries=3)
 def download_file(
@@ -10,7 +11,7 @@ def download_file(
     data_type: str = "projects",
     save_dir_pref: str = "data",
     replace_existing_file=False,
-) -> None:
+) -> str:
 
     data_type_options = ["projects", "abstracts", "publications", "linktables"]
 
@@ -21,27 +22,45 @@ def download_file(
     save_dir = f"{save_dir_pref}/{data_type}"
     url = f"https://reporter.nih.gov/exporter/{data_type}/download/{data_year}"
     file_path = f"{save_dir}/{data_year}.zip"
-    
+
     if not os.path.isdir(save_dir):
         os.makedirs(save_dir)
     # os.system(f'wget -O {file_path} {url}')
-    
+
     if os.path.exists(file_path) and not replace_existing_file:
         print(f"File already present in {file_path}. Skipping download.")
-        return
-    
+        return file_path
+
     if os.path.exists(file_path) and replace_existing_file:
         print(f"Deleting pre-existing file at: {file_path}")
         os.remove(file_path)
     filename = wget.download(url=url, out=file_path)
-    
+
     print(
         f"Downlaod of {data_type}-{data_year} was successful. Downloaded file name: {filename}"
     )
-    return
+    return file_path
 
 
 download_file(data_year=2020)
+
+
+def unzip_file(file_path: str) -> str:
+    """This function unpacks compressed file.
+    Input:
+        file_path: file_path as string.
+    Output:
+        file_dir: Directory of extracted files, as string.
+    """
+    # import shutil
+    file_dir = "/".join(file_path.split("/")[:-1]) + "/" + "extracted/"
+    shutil.unpack_archive(filename=file_path, extract_dir=file_dir)
+    print(f'File unpack successful for {file_path}.')
+    return file_dir
+
+
+def convert_to_parquet():
+    return
 
 
 data_type_dict = {
