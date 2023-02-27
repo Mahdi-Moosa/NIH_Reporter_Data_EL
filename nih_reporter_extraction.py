@@ -142,7 +142,7 @@ def write_gcs(path: str, overwrite_file_in_gcs: bool = False) -> None:
 
 @flow(log_prints=True)
 def fetch_and_save_parquet(
-    data_year, data_type, save_dir_prefix, replace_existing_file: bool = False
+    data_year, data_type, save_dir_prefix, replace_existing_file: bool = False, gcs_write: bool = False
 ) -> str:
     """Subflow to download and process single file, if not already present."""
     file_path = download_file(
@@ -160,7 +160,11 @@ def fetch_and_save_parquet(
         print(f"Parquet file already preset at {saved_path}")
         return saved_path
     saved_path = zip_to_parquet(file_path=file_path)
-    print(f"Parquet file saved at: {saved_path}")
+    print(f"Parquet file locally saved at: {saved_path}")
+    if gcs_write:
+        print(f"Writing file to GCS @ {saved_path}")
+        write_gcs(path= saved_path, overwrite_file_in_gcs=False)
+        print(f"Write to google cloud storage was successful @ {saved_path}")
     return saved_path
 
 
@@ -176,11 +180,13 @@ def nih_reporter_dw(
     for data_type in data_types:
         for year in data_years:
             saved_file_path = fetch_and_save_parquet(
-                data_year=year, data_type=data_type, save_dir_prefix=save_dir_prefix
+                data_year=year, data_type=data_type, save_dir_prefix=save_dir_prefix, gcs_write=True
             )
-            if write_to_gcs:
-                write_gcs(saved_file_path)
+            print(f"Data fetch and write succesful for data type: {data_type} and year: {year}.")
 
 
 if __name__ == "__main__":
-    nih_reporter_dw(data_years=[1985], data_types=["projects"], write_to_gcs=True)
+    nih_reporter_dw(# data_years=[1985, 1986, 1987, 1988], 
+                    # data_types=["projects"], 
+                    write_to_gcs=True
+                    )
