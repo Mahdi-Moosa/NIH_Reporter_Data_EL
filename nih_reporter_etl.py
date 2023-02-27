@@ -67,14 +67,18 @@ def read_df(file_path: str) -> pd.DataFrame:
             pandas dataframe.
         '''
         try:
-            df = pd.read_csv(url, compression='zip', low_memory=False, encoding ='latin-1')
+            df = pd.read_csv(file_path, compression='zip', low_memory=False, encoding ='latin-1')
             print('Parse engine was default.')
         except:
-            df = pd.read_csv(url, compression='zip', encoding ='latin-1', sep='","',engine='python')
+            df = pd.read_csv(file_path, compression='zip', encoding ='latin-1', sep='","',engine='python')
+            column_headers = [x.replace('"', '') for x in df.columns]
+            df.columns = column_headers
             print("Parse engine was python, with custom separator: [sep='","',engine='python']")
         print(f'Total number of rows read: {len(df)}')
         return df
 
+def convert_to_parquet(df : pd.DataFrame, save_dir : str) -> str:
+    df.to_parquet('')
 
 data_type_dict = {
     "APPLICATION_ID": "int64",
