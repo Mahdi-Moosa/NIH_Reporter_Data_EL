@@ -59,8 +59,21 @@ def unzip_file(file_path: str) -> str:
     return file_dir
 
 
-def convert_to_parquet():
-    return
+def read_df(file_path: str) -> pd.DataFrame:
+        '''This function takes file_path (of zip compressed dataframe) as input. Reads files as pandas dataframe and returns the dataframe.
+        Input:
+            file_path: path to zip compressed csv files.
+        Output:
+            pandas dataframe.
+        '''
+        try:
+            df = pd.read_csv(url, compression='zip', low_memory=False, encoding ='latin-1')
+            print('Parse engine was default.')
+        except:
+            df = pd.read_csv(url, compression='zip', encoding ='latin-1', sep='","',engine='python')
+            print("Parse engine was python, with custom separator: [sep='","',engine='python']")
+        print(f'Total number of rows read: {len(df)}')
+        return df
 
 
 data_type_dict = {
