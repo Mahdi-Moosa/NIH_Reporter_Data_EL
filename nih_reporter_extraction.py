@@ -5,6 +5,7 @@ import os
 import wget
 import shutil
 
+
 @task(log_prints=True, retries=3)
 def download_file(
     data_year: int,
@@ -50,6 +51,7 @@ def download_file(
     )
     return file_path
 
+
 @task(log_prints=True)
 def unzip_file(file_path: str) -> str:
     """This function unpacks compressed file.
@@ -63,6 +65,7 @@ def unzip_file(file_path: str) -> str:
     shutil.unpack_archive(filename=file_path, extract_dir=file_dir)
     print(f"File unpack successful for {file_path}.")
     return file_dir
+
 
 @task(log_prints=True)
 def zip_to_parquet(file_path: str) -> str:
@@ -99,37 +102,77 @@ def zip_to_parquet(file_path: str) -> str:
     df.to_parquet(parquet_path)
     return parquet_path
 
-@task(log_prints=True, retries=3)
-def write_gcs(path: str) -> None:
+
+@task(log_prints=True, retries=0)
+def write_gcs(path: str, overwrite_file_in_gcs: bool = False) -> None:
     """Upload local parquet file to GCS"""
     gcs_block = GcsBucket.load("de-zoomcamp-gcs")
-    gcs_block.upload_from_path(from_path=path, to_path=path)
+    if overwrite_file_in_gcs:
+        "If overwrite is true, file presence will not be checked. Local file will be directly uploaded."
+        gcs_block.upload_from_path(from_path=path, to_path=path, timeout=14400)
+        print(f"File written at GCS bucket at: {path}")
+        return
+
+    # This block will execute when overwrite_file_in_gcs is set False.
+    # First, it will check whether the file is already present in GCS block. This has to be similar folder organization from the root of local folder. For example, if the file is in 'A/B/C/d.parquet' local directory, then in GCS the file will be uploaded at 'A/B/C/D.parquet' in GCS.
+    # Second, if the file is present, upload will be skipped.
+    # Third, if the file is absent, the file will be uploaded.
+    file_dir = "/".join(path.split("/")[:-1])
+    fname = path.split("/")[-1]
+    files_present_in_bucket = gcs_block.list_blobs(file_dir)
+    files_present_in_bucket = [
+        blob.name for blob in files_present_in_bucket
+    ]  # Blob object ref: https://cloud.google.com/python/docs/reference/storage/latest/google.cloud.storage.blob.Blob
+    print(
+        f"Files aready present in bucket. Name of blobs already present are are\n: {files_present_in_bucket}"
+    )
+
+    # Checking if parquet file is already present in GCS bucket. If present, file upload will be skipped.
+    if path in files_present_in_bucket and overwrite_file_in_gcs == False:
+        print(
+            f"File named {fname} is already present in GCS @ {files_present_in_bucket}"
+        )
+        return
+    gcs_block.upload_from_path(
+        from_path=path, to_path=path, timeout=14400
+    )  # Had to add 14400 s (4 hrs) timeout since upload kept on getting timed out with my slow upload speed broadband.
+    print(f"File write at GCS successful; {path}")
     return
+
 
 @flow(log_prints=True)
 def fetch_and_save_parquet(
     data_year, data_type, save_dir_prefix, replace_existing_file: bool = False
 ) -> str:
-    '''Subflow to download and process single file.'''
+    """Subflow to download and process single file, if not already present."""
     file_path = download_file(
         data_type=data_type,
         data_year=data_year,
         save_dir_prefix=save_dir_prefix,
         replace_existing_file=replace_existing_file,
     )
+
+    # Checking whether parquet file already exists. If present, zip to parquet conversion is skipped. Saved parquet location is returned.
+    parquet_folder = "/".join(file_path.split("/")[:-1]) + "/" + "extracted/"
+    parquet_path = parquet_folder + file_path.split("/")[-1] + ".parquet"
+    saved_path = parquet_path
+    if os.path.exists(saved_path) and replace_existing_file == False:
+        print(f"Parquet file already preset at {saved_path}")
+        return saved_path
     saved_path = zip_to_parquet(file_path=file_path)
     print(f"Parquet file saved at: {saved_path}")
     return saved_path
+
 
 @flow(log_prints=True, description="Fetch data from NIH RePORTER to Data Lake.")
 def nih_reporter_dw(
     data_years: list[int] = list(range(1985, 2022, 1)),
     data_types: list = ["projects", "abstracts", "publications", "linktables"],
-    save_dir_prefix: str = "data",
+    save_dir_prefix: str = "nih_reporter_data",
     replace_existing_file: bool = False,
-    write_to_gcs : bool = False
+    write_to_gcs: bool = False,
 ):
-    '''Main flow to download all NIH RePORTER files.'''
+    """Main flow to download all NIH RePORTER files."""
     for data_type in data_types:
         for year in data_years:
             saved_file_path = fetch_and_save_parquet(
@@ -138,5 +181,6 @@ def nih_reporter_dw(
             if write_to_gcs:
                 write_gcs(saved_file_path)
 
+
 if __name__ == "__main__":
-    nih_reporter_dw(write_to_gcs=True)
+    nih_reporter_dw(data_years=[1985], data_types=["projects"], write_to_gcs=True)
