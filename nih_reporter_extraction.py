@@ -127,6 +127,7 @@ def nih_reporter_dw(
     data_types: list = ["projects", "abstracts", "publications", "linktables"],
     save_dir_prefix: str = "data",
     replace_existing_file: bool = False,
+    write_to_gcs : bool = False
 ):
     '''Main flow to download all NIH RePORTER files.'''
     for data_type in data_types:
@@ -134,7 +135,8 @@ def nih_reporter_dw(
             saved_file_path = fetch_and_save_parquet(
                 data_year=year, data_type=data_type, save_dir_prefix=save_dir_prefix
             )
-            write_gcs(saved_file_path)
+            if write_to_gcs:
+                write_gcs(saved_file_path)
 
 if __name__ == "__main__":
-    nih_reporter_dw()
+    nih_reporter_dw(write_to_gcs=True)
