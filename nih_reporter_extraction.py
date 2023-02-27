@@ -90,84 +90,22 @@ def zip_to_parquet(file_path: str) -> str:
             "',engine='python']",
         )
     print(f"Total number of rows read: {len(df)}")
-    
+
     parquet_folder = "/".join(file_path.split("/")[:-1]) + "/" + "extracted/"
     parquet_path = parquet_folder + file_path.split("/")[-1] + ".parquet"
     if not os.path.isdir(parquet_folder):
-        print(f'{parquet_folder} was absent. Creating the folder/directory.')
+        print(f"{parquet_folder} was absent. Creating the folder/directory.")
         os.makedirs(parquet_folder)
-    
+
     # Write data to parquet file.
     df.to_parquet(parquet_path)
     return parquet_path
-
-
-# def convert_to_parquet(df : pd.DataFrame, save_dir : str) -> str:
-#     df.to_parquet(save_dir)
-
-# data_type_dict = {
-#     "APPLICATION_ID": "int64",
-#     "ACTIVITY": str,
-#     "ADMINISTERING_IC": str,
-#     "APPLICATION_TYPE": "Int64",
-#     "ARRA_FUNDED": str,
-#     "AWARD_NOTICE_DATE": str,
-#     "BUDGET_START": str,
-#     "BUDGET_END": str,
-#     "CFDA_CODE": "Int64",
-#     "CORE_PROJECT_NUM": str,
-#     "ED_INST_TYPE": str,
-#     "FOA_NUMBER": str,
-#     "FULL_PROJECT_NUM": str,
-#     "FUNDING_ICs": str,
-#     "FUNDING_MECHANISM": str,
-#     "FY": "int64",
-#     "IC_NAME": str,
-#     "NIH_SPENDING_CATS": str,
-#     "ORG_CITY": str,
-#     "ORG_COUNTRY": str,
-#     "ORG_DEPT": str,
-#     "ORG_DISTRICT": "Int64",
-#     "ORG_DUNS": str,
-#     "ORG_FIPS": str,
-#     "ORG_IPF_CODE": "Int64",
-#     "ORG_NAME": str,
-#     "ORG_STATE": str,
-#     "ORG_ZIPCODE": str,
-#     "PHR": str,
-#     "PI_IDS": str,
-#     "PI_NAMEs": str,
-#     "PROGRAM_OFFICER_NAME": str,
-#     "PROJECT_START": str,
-#     "PROJECT_END": str,
-#     "PROJECT_TERMS": str,
-#     "PROJECT_TITLE": str,
-#     "SERIAL_NUMBER": "Int64",
-#     "STUDY_SECTION": str,
-#     "STUDY_SECTION_NAME": str,
-#     "SUBPROJECT_ID": "Int64",
-#     "SUFFIX": str,
-#     "SUPPORT_YEAR": "Int64",
-#     "DIRECT_COST_AMT": "Int64",
-#     "INDIRECT_COST_AMT": "Int64",
-#     "TOTAL_COST": "Int64",
-#     "TOTAL_COST_SUB_PROJECT": "Int64",
-# }
-
-# df = pd.read_csv('data/projects/RePORTER_PRJ_C_FY2020.csv', encoding='latin-1', dtype= data_type_dict)
-# df = pd.read_csv(
-#     "data/projects/2020.zip",
-#     compression="zip",
-#     encoding="latin-1",
-#     dtype=data_type_dict,
-# )
-# print(df.shape)
-
 
 @flow(log_prints=True)
 def fetch_and_save_parquet(
     data_year, data_type, save_dir_prefix, replace_existing_file: bool = False
 ):
+    '''Subflow to download and process single file.'''
     file_path = download_file(
         data_type=data_type,
         data_year=data_year,
@@ -177,7 +115,6 @@ def fetch_and_save_parquet(
     saved_path = zip_to_parquet(file_path=file_path)
     print(f"Parquet file saved at: {saved_path}")
 
-
 @flow(log_prints=True, description="Fetch data from NIH RePORTER to Data Lake.")
 def nih_reporter_dw(
     data_years: list[int] = list(range(1985, 2022, 1)),
@@ -185,12 +122,12 @@ def nih_reporter_dw(
     save_dir_prefix: str = "data",
     replace_existing_file: bool = False,
 ):
+    '''Main flow to download all NIH RePORTER files.'''
     for data_type in data_types:
         for year in data_years:
             fetch_and_save_parquet(
                 data_year=year, data_type=data_type, save_dir_prefix=save_dir_prefix
             )
 
-
 if __name__ == "__main__":
-    nih_reporter_dw(data_types=["projects", "publications"], data_years=[2019, 2020])
+    nih_reporter_dw(data_years=[2019, 2020])
