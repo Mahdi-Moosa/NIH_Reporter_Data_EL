@@ -1,10 +1,14 @@
 # Objective
-Create a database of twitter handles for all NIH funded PI's.
+Extract and load NIH-funded research data to cloud datalake.
 
 # Description
-This repository is hosts the pipeline.
+This repository is hosts the EL pipeline.
 
 # Steps
 * Get year x data from NIH reporter (zip file).
 * unzip file, read as pandas df, save as parquet file.
-* Repartition parquet file, if required.
+* Upload parquet file to Google Cloud Storage.
+
+# Orchestration tool
+
+Prefect: https://docs.prefect.io/
