@@ -137,9 +137,6 @@ def data_lake_presence_check(file_name: str) -> bool:
     return False
 
 
-# def main_flow()
-
-
 def main_function(baseline_url: str = "https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/"):
     xml_gz_links = get_xml_gz_links(baseline_url=baseline_url)
     for lnk in xml_gz_links[0:3]:
