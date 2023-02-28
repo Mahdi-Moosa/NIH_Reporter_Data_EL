@@ -137,20 +137,16 @@ def data_lake_presence_check(file_name: str) -> bool:
     return False
 
 
-def main_function(baseline_url: str = "https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/"):
+def main_function(baseline_url: str = "https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/", presence_check : bool = True):
     xml_gz_links = get_xml_gz_links(baseline_url=baseline_url)
     for lnk in xml_gz_links[0:3]:
-        if data_lake_presence_check(lnk):
+        if presence_check and data_lake_presence_check(lnk):
             print(
                 f"Corresponding parquet file already present in the data lake for: {lnk}."
             )
             continue
         dl_url = baseline_url + lnk
         el_single_link(url=dl_url)
-
-    el_single_link(
-        url="https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/pubmed23n0002.xml.gz"
-    )
     return
 
 
