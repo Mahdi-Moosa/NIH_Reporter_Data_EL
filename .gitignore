@@ -2,3 +2,4 @@ data/
 nih_reporter_data/
 test.py
 Exploration.ipynb
+.ipynb_checkpoints/
