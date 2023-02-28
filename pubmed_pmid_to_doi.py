@@ -4,6 +4,8 @@ import shutil, gzip
 import pandas as pd
 import lxml.etree as ET
 from datetime import datetime
+from lxml import html
+import requests
 
 start_time = datetime.now()
 
@@ -14,7 +16,6 @@ def download_file(
     replace_existing_file: bool = False,
 ) -> str:
     """Ths function downloads data file from from provided URL.
-    See https://report.nih.gov/faqs for further details.
     Input:
         url: URL to be downloaded.
         save_dir_prefix: Prefix of the directory where data will be saved. By default, data will be saved in a folder named 'pubmed_data'. The folder will be created if not present.
@@ -108,7 +109,7 @@ def delete_file(fpath: str) -> None:
 
 
 def el_single_link(url) -> None:
-    '''Extraction and load function for single URL.'''
+    """Extraction and load function for single URL."""
     downloaded_file_path = download_file(url=url)
     uncompressed_file_path = uncompress_file(file_path=downloaded_file_path)
     print(f"Extracted file saved at {uncompressed_file_path}")
@@ -116,10 +117,40 @@ def el_single_link(url) -> None:
     print(f"Removing raw files from the staging folder.")
     delete_file(uncompressed_file_path)
     delete_file(downloaded_file_path)
-    return 
+    return
 
 
-def main_function():
+def get_xml_gz_links(baseline_url):
+    pubmed_ftp_page = requests.get(baseline_url)
+    html_parse = html.fromstring(pubmed_ftp_page.text)
+    all_links = list(html_parse.iterlinks())
+    xml_gz_links = [c for (a, b, c, d) in all_links if c.endswith(".xml.gz")]
+    return xml_gz_links
+
+
+def data_lake_presence_check(file_name: str) -> bool:
+    """For a provided .xml.gz file name, this function will look for corresponding parquet file. If present, True will be returned. Otherwise False."""
+    parquet_prefix = "pubmed_data/data_lake/"
+    parquet_path = parquet_prefix + file_name.strip(".xml.gz") + ".parquet"
+    if os.path.exists(parquet_path):
+        return True
+    return False
+
+
+# def main_flow()
+
+
+def main_function(baseline_url: str = "https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/"):
+    xml_gz_links = get_xml_gz_links(baseline_url=baseline_url)
+    for lnk in xml_gz_links[0:3]:
+        if data_lake_presence_check(lnk):
+            print(
+                f"Corresponding parquet file already present in the data lake for: {lnk}."
+            )
+            continue
+        dl_url = baseline_url + lnk
+        el_single_link(url=dl_url)
+
     el_single_link(
         url="https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/pubmed23n0002.xml.gz"
     )
