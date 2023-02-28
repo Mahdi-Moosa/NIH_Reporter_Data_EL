@@ -1,5 +1,6 @@
 data/
 nih_reporter_data/
+pubmed_data/
 test.py
 Exploration.ipynb
 .ipynb_checkpoints

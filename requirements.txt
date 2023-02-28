@@ -3,3 +3,4 @@ prefect==2.8.3
 prefect-gcp[cloud_storage]
 wget==3.2
 fastparquet==2023.2.0
+lxml==4.9.2
