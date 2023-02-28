@@ -7,6 +7,7 @@ from datetime import datetime
 
 start_time = datetime.now()
 
+
 def download_file(
     url: str,
     save_dir_prefix: str = "pubmed_data",
@@ -67,51 +68,67 @@ def uncompress_file(file_path: str) -> str:
     print(f"File unpack successful for {file_path}.")
     return extracted_file_path
 
-def pmid_to_doi_linktable(xml_file_path : str) -> None:
-    '''Reads pubmed xml file, grabs PMID:DOI pairs and returns a dataframe with PMIDs-DOIs. Rows with empty DOIs are dropped before returning dataframe.'''
+
+def pmid_to_doi_linktable(xml_file_path: str) -> None:
+    """Reads pubmed xml file, grabs PMID:DOI pairs and returns a dataframe with PMIDs-DOIs. Rows with empty DOIs are dropped before returning dataframe."""
     article_list = []
-    for event, element in ET.iterparse(xml_file_path, tag="ArticleIdList", events=("end",)):
+    for event, element in ET.iterparse(
+        xml_file_path, tag="ArticleIdList", events=("end",)
+    ):
         article_id_pubmed = element.xpath('.//ArticleId[@IdType="pubmed"]')[0].text
-        try: 
+        try:
             # Assumption: All entries in PubMed has PMID, but some might not have DOI.
             article_id_doi = element.xpath('.//ArticleId[@IdType="doi"]')[0].text
         except:
             article_id_doi = None
         article_list.append((article_id_pubmed, article_id_doi))
     df = pd.DataFrame(article_list).dropna()
-    df.columns = ['PMID', 'DOI']
-    parquet_path_prefix = "/".join(xml_file_path.split('/')[:-2]) + '/' + 'data_lake/'
-    parquet_fname = xml_file_path.split("/")[-1].rsplit(".", 1)[0] + '.parquet'
+    df.columns = ["PMID", "DOI"]
+    parquet_path_prefix = "/".join(xml_file_path.split("/")[:-2]) + "/" + "data_lake/"
+    parquet_fname = xml_file_path.split("/")[-1].rsplit(".", 1)[0] + ".parquet"
     parquet_file_path = parquet_path_prefix + parquet_fname
     if not os.path.isdir(parquet_path_prefix):
         os.makedirs(parquet_path_prefix)
     df.to_parquet(path=parquet_file_path)
-    print(f'Processed data ({parquet_fname}) saved at {parquet_file_path}')
+    print(f"Processed data ({parquet_fname}) saved at {parquet_file_path}")
     return
 
-def delete_file(file_path : str) -> None:
-    '''This function delete the file as specified by file_path.
+
+def delete_file(fpath: str) -> None:
+    """This function delete the file as specified by file_path.
     Input:
         file_path: path of the file to be removed.
     Return:
         Returns none.
-    '''
-    os.remove(file_path)
-    print(f'File: {file_path} deleted.')
+    """
+    print(fpath)
+    os.remove(fpath)
+    print(f"File: {fpath} deleted.")
+    return
+
+
+def el_single_link(url) -> None:
+    '''Extraction and load function for single URL.'''
+    downloaded_file_path = download_file(url=url)
+    uncompressed_file_path = uncompress_file(file_path=downloaded_file_path)
+    print(f"Extracted file saved at {uncompressed_file_path}")
+    pmid_to_doi_linktable(uncompressed_file_path)
+    print(f"Removing raw files from the staging folder.")
+    delete_file(uncompressed_file_path)
+    delete_file(downloaded_file_path)
+    return 
+
+
+def main_function():
+    el_single_link(
+        url="https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/pubmed23n0002.xml.gz"
+    )
     return
 
 
 if __name__ == "__main__":
-    downloaded_file_path = download_file(
-        url="https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/pubmed23n0002.xml.gz"
-    )
-    uncompressed_file_path = uncompress_file(file_path=downloaded_file_path)
-    print(f"Extracted file saved at {uncompressed_file_path}")
-    pmid_to_doi_linktable(uncompressed_file_path)
-    print(f'Removing raw files from the staging folder.')
-    delete_file(uncompress_file)
-    delete_file(download_file)
+    main_function()
 
 end_time = datetime.now()
 
-print(f'Total time of code run: {end_time-start_time} s.')
+print(f"Total time of code run: {end_time-start_time} s.")
