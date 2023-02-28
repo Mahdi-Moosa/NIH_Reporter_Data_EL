@@ -86,13 +86,20 @@ def pmid_to_doi_linktable(xml_file_path : str) -> None:
     if not os.path.isdir(parquet_path_prefix):
         os.makedirs(parquet_path_prefix)
     df.to_parquet(path=parquet_file_path)
+    print(f'Processed data ({parquet_fname}) saved at {parquet_file_path}')
     return
 
-def remove_uncompressed_file():
+def delete_file(file_path : str) -> None:
+    '''This function delete the file as specified by file_path.
+    Input:
+        file_path: path of the file to be removed.
+    Return:
+        Returns none.
+    '''
+    os.remove(file_path)
+    print(f'File: {file_path} deleted.')
     return
 
-def remove_compressed_file():
-    return
 
 if __name__ == "__main__":
     downloaded_file_path = download_file(
@@ -100,8 +107,10 @@ if __name__ == "__main__":
     )
     uncompressed_file_path = uncompress_file(file_path=downloaded_file_path)
     print(f"Extracted file saved at {uncompressed_file_path}")
-    df = pmid_to_doi_linktable(uncompressed_file_path)
-    print(f'Dataframe extraction successful')
+    pmid_to_doi_linktable(uncompressed_file_path)
+    print(f'Removing raw files from the staging folder.')
+    delete_file(uncompress_file)
+    delete_file(download_file)
 
 end_time = datetime.now()
 
