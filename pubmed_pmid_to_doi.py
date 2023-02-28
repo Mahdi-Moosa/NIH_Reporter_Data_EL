@@ -67,7 +67,7 @@ def uncompress_file(file_path: str) -> str:
     print(f"File unpack successful for {file_path}.")
     return extracted_file_path
 
-def pmid_to_doi_linktable(xml_file_path):
+def pmid_to_doi_linktable(xml_file_path : str) -> None:
     '''Reads pubmed xml file, grabs PMID:DOI pairs and returns a dataframe with PMIDs-DOIs. Rows with empty DOIs are dropped before returning dataframe.'''
     article_list = []
     for event, element in ET.iterparse(xml_file_path, tag="ArticleIdList", events=("end",)):
@@ -80,7 +80,19 @@ def pmid_to_doi_linktable(xml_file_path):
         article_list.append((article_id_pubmed, article_id_doi))
     df = pd.DataFrame(article_list).dropna()
     df.columns = ['PMID', 'DOI']
-    return df
+    parquet_path_prefix = "/".join(xml_file_path.split('/')[:-2]) + '/' + 'data_lake/'
+    parquet_fname = xml_file_path.split("/")[-1].rsplit(".", 1)[0] + '.parquet'
+    parquet_file_path = parquet_path_prefix + parquet_fname
+    if not os.path.isdir(parquet_path_prefix):
+        os.makedirs(parquet_path_prefix)
+    df.to_parquet(path=parquet_file_path)
+    return
+
+def remove_uncompressed_file():
+    return
+
+def remove_compressed_file():
+    return
 
 if __name__ == "__main__":
     downloaded_file_path = download_file(
@@ -89,7 +101,7 @@ if __name__ == "__main__":
     uncompressed_file_path = uncompress_file(file_path=downloaded_file_path)
     print(f"Extracted file saved at {uncompressed_file_path}")
     df = pmid_to_doi_linktable(uncompressed_file_path)
-    print(f'Extracted dataframe size: {df.shape}')
+    print(f'Dataframe extraction successful')
 
 end_time = datetime.now()
 
