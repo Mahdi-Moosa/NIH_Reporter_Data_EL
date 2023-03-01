@@ -6,9 +6,10 @@ import lxml.etree as ET
 from datetime import datetime
 from lxml import html
 import requests
+import sys
 
 start_time = datetime.now()
-
+start_index = sys.argv[1]
 
 def download_file(
     url: str,
@@ -151,10 +152,10 @@ def data_lake_presence_check(file_name: str) -> bool:
     return False
 
 
-def main_function(baseline_url: str = "https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/", presence_check : bool = True):
+def main_function(baseline_url: str = "https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/", presence_check : bool = True, start_index : int = 0) :
     xml_gz_links = get_xml_gz_links(baseline_url=baseline_url)
-    n=250
-    for lnk in xml_gz_links[n:n+100]:
+    start_index
+    for lnk in xml_gz_links[start_index:]:
         if presence_check and data_lake_presence_check(lnk):
             print(
                 f"Corresponding parquet file already present in the data lake for: {lnk}."
