@@ -83,6 +83,10 @@ def pmid_to_doi_linktable(xml_file_path: str) -> None:
         except:
             article_id_doi = None
         article_list.append((article_id_pubmed, article_id_doi))
+        # Clearing element to save memory; Ref: https://pranavk.me/python/parsing-xml-efficiently-with-python/; https://stackoverflow.com/a/7171543
+        element.clear()
+        while element.getprevious() is not None:
+            del element.getparent()[0]
     df = pd.DataFrame(article_list).dropna()
     df.columns = ["PMID", "DOI"]
     parquet_path_prefix = "/".join(xml_file_path.split("/")[:-2]) + "/" + "data_lake/"
@@ -139,7 +143,7 @@ def data_lake_presence_check(file_name: str) -> bool:
 
 def main_function(baseline_url: str = "https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/", presence_check : bool = True):
     xml_gz_links = get_xml_gz_links(baseline_url=baseline_url)
-    for lnk in xml_gz_links[0:3]:
+    for lnk in xml_gz_links[0:100]:
         if presence_check and data_lake_presence_check(lnk):
             print(
                 f"Corresponding parquet file already present in the data lake for: {lnk}."
