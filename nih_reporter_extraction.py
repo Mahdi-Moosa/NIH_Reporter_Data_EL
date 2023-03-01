@@ -139,6 +139,18 @@ def write_gcs(path: str, overwrite_file_in_gcs: bool = False) -> None:
     print(f"File write at GCS successful; {path}")
     return
 
+@task(log_prints=True)
+def delete_file(fpath: str) -> None:
+    """This function delete the file as specified by file_path.
+    Input:
+        file_path: path of the file to be removed.
+    Return:
+        Returns None.
+    """
+    print(fpath)
+    os.remove(fpath)
+    print(f"File: {fpath} deleted.")
+    return
 
 @flow(log_prints=True)
 def fetch_and_save_parquet(
@@ -184,9 +196,16 @@ def nih_reporter_dw(
             )
             print(f"Data fetch and write succesful for data type: {data_type} and year: {year}.\n Save location was {saved_file_path}")
 
+            # Deleting raw file (compressed).
+            compressed_file_path_prefix = '/'.join(saved_file_path.split('/')[:-2])
+            compressed_file_name = saved_file_path.split('/')[-1].rsplit('.', 1)[0]
+            compressed_file_path = compressed_file_path_prefix + '/' + compressed_file_name
+            print(f'Deleting compressed file at {compressed_file_path}')
+            delete_file(compressed_file_path)
+
 
 if __name__ == "__main__":
-    nih_reporter_dw(# data_years=[1985, 1986, 1987, 1988], 
-                    # data_types=["projects"], 
+    nih_reporter_dw(data_years=[1985, 1986, 1987, 1988], 
+                    data_types=["projects"], 
                     write_to_gcs=True
                     )
