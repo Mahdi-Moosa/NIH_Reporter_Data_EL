@@ -75,8 +75,11 @@ def pmid_to_doi_linktable(xml_file_path: str) -> None:
     article_list = []
     for event, element in ET.iterparse(
         xml_file_path, tag="ArticleIdList", events=("end",)
-    ):
-        article_id_pubmed = element.xpath('.//ArticleId[@IdType="pubmed"]')[0].text
+    ):  
+        try:
+            article_id_pubmed = element.xpath('.//ArticleId[@IdType="pubmed"]')[0].text
+        except:
+            article_id_pubmed = None
         try:
             # Assumption: All entries in PubMed has PMID, but some might not have DOI.
             article_id_doi = element.xpath('.//ArticleId[@IdType="doi"]')[0].text
