@@ -17,5 +17,5 @@ Prefect: https://docs.prefect.io/
 
 * Run parallel as deployment; link: https://discourse.prefect.io/t/how-can-i-run-multiple-subflows-or-child-flows-in-parallel/96/12
 * Create async function that will call multiple async subflows: https://discourse.prefect.io/t/how-can-i-run-multiple-subflows-or-child-flows-in-parallel/96/10
-* Dask task runner: https://github.com/tekumara/prefect-demo/blob/main/flows/dask_flow.py
+* Dask task runner: https://github.com/tekumara/prefect-demo/blob/main/flows/dask_flow.py (Point to note: Task runner works with only tasks, not with flows.)
 
