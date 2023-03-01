@@ -171,7 +171,7 @@ def data_lake_presence_check(file_name: str) -> bool:
 
 
 @flow(log_prints=True)
-def main_function(
+def batch_doi_fetch(
     baseline_url: str = "https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/",
     presence_check: bool = True,
     start_index: int = 0,
@@ -190,7 +190,7 @@ def main_function(
 
 
 if __name__ == "__main__":
-    main_function(start_index=348)
+    batch_doi_fetch(start_index=348)
 
 end_time = datetime.now()
 

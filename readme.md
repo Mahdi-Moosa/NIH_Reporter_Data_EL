@@ -12,3 +12,10 @@ This repository is hosts the EL pipeline.
 # Orchestration tool
 
 Prefect: https://docs.prefect.io/
+
+# Notes on prefect parallel run (Prefect 2)
+
+* Run parallel as deployment; link: https://discourse.prefect.io/t/how-can-i-run-multiple-subflows-or-child-flows-in-parallel/96/12
+* Create async function that will call multiple async subflows: https://discourse.prefect.io/t/how-can-i-run-multiple-subflows-or-child-flows-in-parallel/96/10
+* Dask task runner: https://github.com/tekumara/prefect-demo/blob/main/flows/dask_flow.py
+
