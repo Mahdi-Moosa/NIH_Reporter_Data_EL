@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 
 df = pd.read_parquet(path='pubmed_data/data_lake/')
 
@@ -27,6 +28,10 @@ df.columns = ['PMID', 'DOI']
 
 print(f'Final shape: {df.shape}')
 
-df.to_parquet(path='pubmed_data/pubmed_to_doi_linktable.parquet')
+path = 'pubmed_data\pmid_doi_linktable.parquet'
+if not os.path.isdir(path):
+    os.makedirs(path)
+
+df.to_parquet(path=path)
 
 print('Single parquet file saved.') # It might make sense to make partitioned parquet, if needed.
