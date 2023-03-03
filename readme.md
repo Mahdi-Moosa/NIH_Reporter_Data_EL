@@ -4,7 +4,7 @@ Extract and load NIH-funded research data to cloud datalake.
 # Description
 This repository is hosts the EL pipeline.
 
-# Py-scripts in the folder:
+# Py-scripts in the repository:
 
 * nih_reporter_extraction.py: Pipeline to extract, transform and load NIH reporter data to local/cloud data lake.
 * nih_reporter_extraction_prefect.py: Prefect orchestration of the pipeline.
