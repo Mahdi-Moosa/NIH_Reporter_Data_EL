@@ -72,6 +72,7 @@ async def download_file(url, sem):
                         f"Download failed for {file_name} in round number {fail_count}."
                     )
                     if fail_count > 10: # Stop trying if download fails for 10 consecutive attempts.
+                        print(f'Already tried to download file {fail_count} times. Skipping file {file_name}.')
                         break
                     await asyncio.sleep(1)
             if data: # Only try to save file if data not None/empty.
@@ -81,13 +82,12 @@ async def download_file(url, sem):
                     f.write(data)
                     # Print a message when done
                     print(f"Downloaded {file_name}")
-                    # print(f"Downloaded {url}")
         # release semaphore
         print(f"Released semaphore for {url}")
 
 
 async def main():
-    sem = asyncio.Semaphore(2)  # create semaphore with limit 3
+    sem = asyncio.Semaphore(3)  # create semaphore with limit 3
     base_url = "https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/"
     tasks = []
     for i in range(1, 11):  # create 10 tasks
