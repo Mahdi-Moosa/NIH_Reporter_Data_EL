@@ -41,7 +41,9 @@
 import asyncio
 import aiohttp
 import gzip
+from datetime import datetime
 
+start_time = datetime.now()
 
 async def download_file(url, sem):
     # Get the file name from the url
@@ -82,7 +84,7 @@ async def download_file(url, sem):
 
 
 async def main():
-    sem = asyncio.Semaphore(3)  # create semaphore with limit 3
+    sem = asyncio.Semaphore(4)  # create semaphore with limit 3
     base_url = "https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/"
     tasks = []
     for i in range(1, 5):  # create 10 tasks
@@ -93,3 +95,7 @@ async def main():
 
 
 asyncio.run(main())
+
+end_time = datetime.now()
+
+print(f'Total time to run was: {end_time - start_time}')
