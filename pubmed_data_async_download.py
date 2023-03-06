@@ -41,7 +41,9 @@
 import asyncio
 import aiohttp
 import gzip
+from datetime import datetime
 
+start_time = datetime.now()
 
 async def download_file(url, sem):
     # Get the file name from the url
@@ -69,23 +71,26 @@ async def download_file(url, sem):
                     print(
                         f"Download failed for {file_name} in round number {fail_count}."
                     )
+                    if fail_count > 10: # Stop trying if download fails for 10 consecutive attempts.
+                        break
                     await asyncio.sleep(1)
+            if data: # Only try to save file if data not None/empty.
                 # Open a gzip file for writing in binary mode
-            with gzip.open(f"data/{file_name}", "wb") as f:
-                # Write the data to the file
-                f.write(data)
-                # Print a message when done
-                print(f"Downloaded {file_name}")
-                # print(f"Downloaded {url}")
+                with gzip.open(f"data/{file_name}", "wb") as f:
+                    # Write the data to the file
+                    f.write(data)
+                    # Print a message when done
+                    print(f"Downloaded {file_name}")
+                    # print(f"Downloaded {url}")
         # release semaphore
         print(f"Released semaphore for {url}")
 
 
 async def main():
-    sem = asyncio.Semaphore(3)  # create semaphore with limit 3
+    sem = asyncio.Semaphore(2)  # create semaphore with limit 3
     base_url = "https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/"
     tasks = []
-    for i in range(1, 5):  # create 10 tasks
+    for i in range(1, 11):  # create 10 tasks
         url = f"{base_url}pubmed23n{i:04d}.xml.gz"
         task = asyncio.create_task(download_file(url, sem))
         tasks.append(task)
@@ -93,3 +98,7 @@ async def main():
 
 
 asyncio.run(main())
+
+end_time = datetime.now()
+
+print(f'Total time to run was: {end_time - start_time}')
