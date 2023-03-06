@@ -42,34 +42,54 @@ import asyncio
 import aiohttp
 import gzip
 
+
 async def download_file(url, sem):
     # Get the file name from the url
     file_name = url.split("/")[-1]
-    async with sem: # acquire semaphore
-        print(f"Acquired semaphore for {url}")
+    async with sem:  # acquire semaphore
+        print(f"Acquired semaphore for {url}. Waiting 1 s (asyncio).")
+        await asyncio.sleep(
+            1
+        )  # This adds 1s delay to async thread before initiating next request/download.
         async with aiohttp.ClientSession() as session:
             print(f"Making request for {url}")
-            async with session.get(url) as response:
-                data = await response.read()
-                # do something with data
+            data = None
+            fail_count = 0
+            while data is None:  # Keeps looping if fails to retrieve.
+                try:
+                    async with session.get(url) as response:
+                        print(
+                            f"Status of response for {file_name} was {response.status}"
+                        )
+                        # assert response.status == 400
+                        data = await response.read()
+                except:
+                    # sleep a little and try again
+                    fail_count += 1
+                    print(
+                        f"Download failed for {file_name} in round number {fail_count}."
+                    )
+                    await asyncio.sleep(1)
                 # Open a gzip file for writing in binary mode
-                with gzip.open(f'data/{file_name}', "wb") as f:
-                    # Write the data to the file
-                    f.write(data)
+            with gzip.open(f"data/{file_name}", "wb") as f:
+                # Write the data to the file
+                f.write(data)
                 # Print a message when done
                 print(f"Downloaded {file_name}")
                 # print(f"Downloaded {url}")
         # release semaphore
         print(f"Released semaphore for {url}")
 
+
 async def main():
-    sem = asyncio.Semaphore(3) # create semaphore with limit 3
+    sem = asyncio.Semaphore(3)  # create semaphore with limit 3
     base_url = "https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/"
     tasks = []
-    for i in range(1, 11): # create 10 tasks
+    for i in range(1, 5):  # create 10 tasks
         url = f"{base_url}pubmed23n{i:04d}.xml.gz"
         task = asyncio.create_task(download_file(url, sem))
         tasks.append(task)
     await asyncio.gather(*tasks)
+
 
 asyncio.run(main())
