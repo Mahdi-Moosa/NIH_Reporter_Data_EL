@@ -8,3 +8,5 @@ Exploration.ipynb
 pmid_doi_linktable_feb_2023.parquet
 pmid_doi_linktable.parquet
 pubmed_data_async_download_prefect.py
+*.cfg
+social_media_data/
