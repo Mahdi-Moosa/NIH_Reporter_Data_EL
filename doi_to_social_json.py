@@ -7,11 +7,21 @@ import os
 config = configparser.ConfigParser()
 config.read('config.cfg')
 
+# Base URL provides baseline biorxiv url
 base_url = config.get('URL', 'base_url')
 
-doi_of_interest = '10.1038/nplants.2016.223'
+doi_of_interest = '10.1101/2021.04.23.440992'
 
 def fetch_media_impact(doi_of_interest: str, base_url: str) -> json:
+    '''Constructs biorxiv URL from base_url and doi.
+    Gets social media impact data as reported in biorxiv.org
+    Saves json file.
+    Input:
+        doi_of_interest: DOI that needs to be fetched.
+        base_url: Biorxiv base URL.
+    Returns:
+        Json file.
+    '''
     url = base_url + doi_of_interest
     response = requests.get(url)
     decoded_data = response.text.encode().decode('utf-8-sig')
